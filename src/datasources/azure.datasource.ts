@@ -3,11 +3,11 @@ import {juggler} from '@loopback/repository';
 
 const config = {
   name: 'Azure',
-  connector: 'mssql',
+  connector: 'mysql',
   url: '',
-  host: 'prog3server.database.windows.net',
-  port: 0,
-  user: 'adminProyecto',
+  host: 'proyectprog3.mysql.database.azure.com',
+  port: 3306,
+  user: 'adminProyecto@proyectprog3',
   password: 'HNCkda11',
   database: 'Proyecto Prog III 2021-2'
 };

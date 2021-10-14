@@ -1,5 +1,5 @@
 import {inject, Getter} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor, HasManyRepositoryFactory} from '@loopback/repository';
+import {DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
 import {AzureDataSource} from '../datasources';
 import {TipoSolicitud, TipoSolicitudRelations, Solicitud} from '../models';
 import {SolicitudRepository} from './solicitud.repository';
@@ -10,8 +10,6 @@ export class TipoSolicitudRepository extends DefaultCrudRepository<
   TipoSolicitudRelations
 > {
 
-  public readonly solicitud: BelongsToAccessor<Solicitud, typeof TipoSolicitud.prototype.id>;
-
   public readonly solicitudes: HasManyRepositoryFactory<Solicitud, typeof TipoSolicitud.prototype.id>;
 
   constructor(
@@ -20,7 +18,5 @@ export class TipoSolicitudRepository extends DefaultCrudRepository<
     super(TipoSolicitud, dataSource);
     this.solicitudes = this.createHasManyRepositoryFactoryFor('solicitudes', solicitudRepositoryGetter,);
     this.registerInclusionResolver('solicitudes', this.solicitudes.inclusionResolver);
-    this.solicitud = this.createBelongsToAccessorFor('solicitud', solicitudRepositoryGetter,);
-    this.registerInclusionResolver('solicitud', this.solicitud.inclusionResolver);
   }
 }
