@@ -23,12 +23,6 @@ export class EvaluacionSolicitud extends Entity {
   id?: number;
 
   @property({
-    type: 'number',
-    required: true,
-  })
-  juradoId: number;
-
-  @property({
     type: 'date',
     required: true,
   })
