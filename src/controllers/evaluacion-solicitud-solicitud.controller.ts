@@ -1,17 +1,17 @@
 import {
-  repository,
+  repository
 } from '@loopback/repository';
 import {
-  param,
   get,
-  getModelSchemaRef,
+  getModelSchemaRef, param
 } from '@loopback/rest';
 import {
   EvaluacionSolicitud,
-  Solicitud,
+  Solicitud
 } from '../models';
 import {EvaluacionSolicitudRepository} from '../repositories';
 
+//@authenticate("admin")
 export class EvaluacionSolicitudSolicitudController {
   constructor(
     @repository(EvaluacionSolicitudRepository)

@@ -4,27 +4,22 @@ import {
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {ResultadoEvaluacion} from '../models';
 import {ResultadoEvaluacionRepository} from '../repositories';
 
+//@authenticate("admin", "jury")
 export class ResultadoEvaluacionController {
   constructor(
     @repository(ResultadoEvaluacionRepository)
-    public resultadoEvaluacionRepository : ResultadoEvaluacionRepository,
-  ) {}
+    public resultadoEvaluacionRepository: ResultadoEvaluacionRepository,
+  ) { }
 
   @post('/resultado-evaluaciones')
   @response(200, {

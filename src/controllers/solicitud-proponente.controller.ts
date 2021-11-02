@@ -17,6 +17,7 @@ import {CorreoNotificacion, ProponenteSolicitud, SolicitudProponente} from '../m
 import {ModalidadRepository, SolicitudProponenteRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
+//@authenticate("admin")
 export class SolicitudProponenteController {
   constructor(
     @repository(SolicitudProponenteRepository)

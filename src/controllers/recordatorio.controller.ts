@@ -17,6 +17,7 @@ import {CorreoNotificacion, NotificacionSms, Recordatorio} from '../models';
 import {RecordatorioRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
+//@authenticate("admin")
 export class RecordatorioController {
   constructor(
     @repository(RecordatorioRepository)

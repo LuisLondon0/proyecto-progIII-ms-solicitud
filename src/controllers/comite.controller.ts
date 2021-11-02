@@ -4,27 +4,22 @@ import {
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Comite} from '../models';
 import {ComiteRepository} from '../repositories';
 
+//@authenticate("admin")
 export class ComiteController {
   constructor(
     @repository(ComiteRepository)
-    public comiteRepository : ComiteRepository,
-  ) {}
+    public comiteRepository: ComiteRepository,
+  ) { }
 
   @post('/comites')
   @response(200, {

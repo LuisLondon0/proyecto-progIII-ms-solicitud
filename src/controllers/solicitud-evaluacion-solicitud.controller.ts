@@ -3,7 +3,7 @@ import {
   CountSchema,
   Filter,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
   del,
@@ -13,14 +13,14 @@ import {
   param,
   patch,
   post,
-  requestBody,
+  requestBody
 } from '@loopback/rest';
 import {
-  Solicitud,
-  EvaluacionSolicitud,
+  EvaluacionSolicitud, Solicitud
 } from '../models';
 import {SolicitudRepository} from '../repositories';
 
+//@authenticate("admin")
 export class SolicitudEvaluacionSolicitudController {
   constructor(
     @repository(SolicitudRepository) protected solicitudRepository: SolicitudRepository,

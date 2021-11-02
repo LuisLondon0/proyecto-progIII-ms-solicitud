@@ -13,9 +13,7 @@ import {Keys as llaves} from '../config/keys';
 
 const readdir = promisify(fs.readdir);
 
-/**
- * A controller to handle file downloads using multipart/form-data media type
- */
+//@authenticate("admin", "jury")
 export class DescargarArchivoController {
 
   constructor(

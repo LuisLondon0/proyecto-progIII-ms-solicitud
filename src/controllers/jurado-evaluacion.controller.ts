@@ -17,6 +17,7 @@ import {CorreoNotificacion, EvaluacionJurado, JuradoEvaluacion} from '../models'
 import {EvaluacionSolicitudRepository, JuradoEvaluacionRepository, ModalidadRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
+//@authenticate("admin")
 export class JuradoEvaluacionController {
   constructor(
     @repository(JuradoEvaluacionRepository)

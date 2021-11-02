@@ -3,9 +3,9 @@ import {
   CountSchema,
   Filter,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
-  import {
+import {
   del,
   get,
   getModelSchemaRef,
@@ -13,15 +13,14 @@ import {
   param,
   patch,
   post,
-  requestBody,
+  requestBody
 } from '@loopback/rest';
 import {
-Comite,
-ComiteSolicitud,
-Solicitud,
+  Comite, Solicitud
 } from '../models';
 import {ComiteRepository} from '../repositories';
 
+//@authenticate("admin")
 export class ComiteSolicitudController {
   constructor(
     @repository(ComiteRepository) protected comiteRepository: ComiteRepository,

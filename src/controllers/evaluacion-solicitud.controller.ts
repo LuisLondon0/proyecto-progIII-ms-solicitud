@@ -17,6 +17,7 @@ import {AceptarRechazarSolicitud, CorreoNotificacion, EvaluacionSolicitud} from 
 import {EvaluacionSolicitudRepository, SolicitudProponenteRepository, SolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
+//@authenticate("admin")
 export class EvaluacionSolicitudController {
   constructor(
     @repository(EvaluacionSolicitudRepository)
@@ -151,6 +152,7 @@ export class EvaluacionSolicitudController {
     await this.evaluacionSolicitudRepository.deleteById(id);
   }
 
+  //@authenticate("Jury")
   @post('/aceptar-rechazar-solicitud')
   @response(200, {
     description: 'Aceptar o rechazar la solicitud',

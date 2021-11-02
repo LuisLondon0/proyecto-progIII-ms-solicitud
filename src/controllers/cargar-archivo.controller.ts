@@ -12,6 +12,7 @@ import path from 'path';
 import {Keys as llaves} from '../config/keys';
 import {SolicitudRepository} from '../repositories';
 
+//@authenticate("admin")
 export class CargarArchivoController {
   constructor(
     @repository(SolicitudRepository)

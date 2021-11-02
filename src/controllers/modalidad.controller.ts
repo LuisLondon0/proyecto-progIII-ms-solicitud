@@ -4,27 +4,22 @@ import {
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Modalidad} from '../models';
 import {ModalidadRepository} from '../repositories';
 
+//@authenticate("admin")
 export class ModalidadController {
   constructor(
     @repository(ModalidadRepository)
-    public modalidadRepository : ModalidadRepository,
-  ) {}
+    public modalidadRepository: ModalidadRepository,
+  ) { }
 
   @post('/modalidades')
   @response(200, {
