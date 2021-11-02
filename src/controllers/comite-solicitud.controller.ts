@@ -16,14 +16,16 @@ import {
   requestBody
 } from '@loopback/rest';
 import {
-  Comite, Solicitud
+  Comite, ComiteSolicitud, Solicitud
 } from '../models';
-import {ComiteRepository} from '../repositories';
+import {ArregloSolicitudes} from '../models/arreglo-solicitudes.model';
+import {ComiteRepository, ComiteSolicitudRepository} from '../repositories';
 
 //@authenticate("admin")
 export class ComiteSolicitudController {
   constructor(
     @repository(ComiteRepository) protected comiteRepository: ComiteRepository,
+    @repository(ComiteSolicitudRepository) protected comiteSolicitudRepository: ComiteSolicitudRepository,
   ) { }
 
   @get('/comites/{id}/solicituds', {
@@ -105,5 +107,71 @@ export class ComiteSolicitudController {
     @param.query.object('where', getWhereSchemaFor(Solicitud)) where?: Where<Solicitud>,
   ): Promise<Count> {
     return this.comiteRepository.solicitudes(id).delete(where);
+  }
+
+  @post('/relacionar-solicitudes-a-comite/{id}', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(ComiteSolicitud)}},
+      },
+    },
+  })
+  async createRelations(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ArregloSolicitudes, {}),
+        },
+      },
+    }) datos: ArregloSolicitudes,
+    @param.path.number('id') comiteId: number
+  ): Promise<Boolean> {
+    if (datos.solicitudes.length > 0) {
+      datos.solicitudes.forEach(async (solicitudId: number) => {
+        let existe = await this.comiteSolicitudRepository.findOne({
+          where: {
+            comiteId: comiteId,
+            solicitudId: solicitudId
+          }
+        })
+        if (!existe) {
+          this.comiteSolicitudRepository.create({
+            comiteId: comiteId,
+            solicitudId: solicitudId
+          })
+        }
+      })
+      return true
+
+    }
+    return false
+
+  }
+  //////////////
+  @post('/evaluacion-jurado', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(ComiteSolicitud)}},
+      },
+    },
+  })
+  async createRelation(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ComiteSolicitud, {
+            title: 'NewAreaInvestigacionInJurado',
+            exclude: ['id'],
+          }),
+        },
+      },
+    }) datos: Omit<ComiteSolicitud, 'id'>,
+  ): Promise<ComiteSolicitud | null> {
+    let registro = await this.comiteSolicitudRepository.create(datos)
+    return registro
   }
 }

@@ -16,3 +16,6 @@ export * from './tipo-solicitud.model';
 
 
 export * from './notificacion-sms.model';
+export * from './arreglo-proponentes.model';
+export * from './arreglo-evaluaciones.model';
+export * from './arreglo-solicitudes.model';

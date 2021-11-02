@@ -13,7 +13,8 @@ import {
   response
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
-import {CorreoNotificacion, ProponenteSolicitud, SolicitudProponente} from '../models';
+import {CorreoNotificacion, ProponenteSolicitud, Solicitud, SolicitudProponente} from '../models';
+import {ArregloProponentes} from '../models/arreglo-proponentes.model';
 import {ModalidadRepository, SolicitudProponenteRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
@@ -187,5 +188,71 @@ export class SolicitudProponenteController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.solicitudProponenteRepository.deleteById(id);
+  }
+
+  @post('/relacionar-proponentes-a-solicitud/{id}', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(SolicitudProponente)}},
+      },
+    },
+  })
+  async createRelations(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ArregloProponentes, {}),
+        },
+      },
+    }) datos: ArregloProponentes,
+    @param.path.number('id') solicitudId: typeof Solicitud.prototype.id
+  ): Promise<Boolean> {
+    if (datos.proponentes.length > 0) {
+      datos.proponentes.forEach(async (proponenteId: number) => {
+        let existe = await this.solicitudProponenteRepository.findOne({
+          where: {
+            proponenteId: proponenteId,
+            solicitudId: solicitudId
+          }
+        })
+        if (!existe) {
+          this.solicitudProponenteRepository.create({
+            proponenteId: proponenteId,
+            solicitudId: solicitudId
+          })
+        }
+      })
+      return true
+
+    }
+    return false
+
+  }
+  //////////////
+  @post('/proponente-solicitud', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(SolicitudProponente)}},
+      },
+    },
+  })
+  async createRelation(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(SolicitudProponente, {
+            title: 'NewAreaInvestigacionInJurado',
+            exclude: ['id'],
+          }),
+        },
+      },
+    }) datos: Omit<SolicitudProponente, 'id'>,
+  ): Promise<SolicitudProponente | null> {
+    let registro = await this.solicitudProponenteRepository.create(datos)
+    return registro
   }
 }

@@ -14,6 +14,7 @@ import {
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
 import {CorreoNotificacion, EvaluacionJurado, JuradoEvaluacion} from '../models';
+import {ArregloEvaluaciones} from '../models/arreglo-evaluaciones.model';
 import {EvaluacionSolicitudRepository, JuradoEvaluacionRepository, ModalidadRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
@@ -181,5 +182,71 @@ export class JuradoEvaluacionController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.juradoEvaluacionRepository.deleteById(id);
+  }
+
+  @post('/relacionar-evaluaciones-a-jurado/{id}', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(JuradoEvaluacion)}},
+      },
+    },
+  })
+  async createRelations(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(ArregloEvaluaciones, {}),
+        },
+      },
+    }) datos: ArregloEvaluaciones,
+    @param.path.number('id') juradoId: number
+  ): Promise<Boolean> {
+    if (datos.evaluaciones.length > 0) {
+      datos.evaluaciones.forEach(async (evaluacionId: number) => {
+        let existe = await this.juradoEvaluacionRepository.findOne({
+          where: {
+            juradoId: juradoId,
+            evaluacionId: evaluacionId
+          }
+        })
+        if (!existe) {
+          this.juradoEvaluacionRepository.create({
+            juradoId: juradoId,
+            evaluacionId: evaluacionId
+          })
+        }
+      })
+      return true
+
+    }
+    return false
+
+  }
+  //////////////
+  @post('/evaluacion-jurado', {
+    responses: {
+      '200': {
+        description: 'create a AreaInvestigacion model instance',
+        content: {'application/json': {schema: getModelSchemaRef(JuradoEvaluacion)}},
+      },
+    },
+  })
+  async createRelation(
+
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(JuradoEvaluacion, {
+            title: 'NewAreaInvestigacionInJurado',
+            exclude: ['id'],
+          }),
+        },
+      },
+    }) datos: Omit<JuradoEvaluacion, 'id'>,
+  ): Promise<JuradoEvaluacion | null> {
+    let registro = await this.juradoEvaluacionRepository.create(datos)
+    return registro
   }
 }
