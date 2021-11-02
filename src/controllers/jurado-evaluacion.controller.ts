@@ -1,30 +1,37 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {JuradoEvaluacion} from '../models';
-import {JuradoEvaluacionRepository} from '../repositories';
+import {Configuracion} from '../llaves/configuracion';
+import {CorreoNotificacion, EvaluacionJurado, JuradoEvaluacion} from '../models';
+import {EvaluacionSolicitudRepository, JuradoEvaluacionRepository, ModalidadRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
+import {NotificacionesService} from '../services';
 
 export class JuradoEvaluacionController {
   constructor(
     @repository(JuradoEvaluacionRepository)
-    public juradoEvaluacionRepository : JuradoEvaluacionRepository,
-  ) {}
+    public juradoEvaluacionRepository: JuradoEvaluacionRepository,
+    @repository(EvaluacionSolicitudRepository)
+    public evaluacionSolicitudRepository: EvaluacionSolicitudRepository,
+    @repository(SolicitudRepository)
+    public solicitudRepository: SolicitudRepository,
+    @repository(ModalidadRepository)
+    public modalidadRepository: ModalidadRepository,
+    @repository(TipoSolicitudRepository)
+    public tipoSolicitudRepository: TipoSolicitudRepository,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
+  ) { }
 
   @post('/jurado-evaluaciones')
   @response(200, {
@@ -35,16 +42,43 @@ export class JuradoEvaluacionController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(JuradoEvaluacion, {
-            title: 'NewJuradoEvaluacion',
-            exclude: ['id'],
+          schema: getModelSchemaRef(EvaluacionJurado, {
+            title: 'NewJuradoEvaluacion'
           }),
         },
       },
     })
-    juradoEvaluacion: Omit<JuradoEvaluacion, 'id'>,
+    EvaluacionJurado: EvaluacionJurado,
   ): Promise<JuradoEvaluacion> {
-    return this.juradoEvaluacionRepository.create(juradoEvaluacion);
+    let evaluacion = {
+      solicitudId: EvaluacionJurado.solicitudId,
+      fechaInvitacion: EvaluacionJurado.fechaInvitacion
+    }
+    let creado = await this.evaluacionSolicitudRepository.create(evaluacion);
+    let solicitud = await this.solicitudRepository.findById(EvaluacionJurado.solicitudId);
+    let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
+    let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
+
+    /**
+     * Buscar jurado por el ID enviado en (EvaluacionJurado.juradoId)
+     * para obtener el correo y demas datos
+     */
+
+    let datos = new CorreoNotificacion();
+    datos.destinatario = "luis.1701814700@ucaldas.edu.co";
+    datos.asunto = Configuracion.asuntoInvitacionEvaluacion;
+    datos.mensaje = `Hola Luis <br/>${Configuracion.mensajeInvitacionEvaluacion} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: Ciencias<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}`
+
+    this.servicioNotificaciones.EnviarCorreo(datos);
+
+    let juradoEvaluacion = {
+      juradoId: EvaluacionJurado.juradoId,
+      evaluacionId: creado.getId()
+    }
+    let juradoEvaluacionCreado = await this.juradoEvaluacionRepository.create(juradoEvaluacion)
+
+
+    return juradoEvaluacionCreado;
   }
 
   @get('/jurado-evaluaciones/count')

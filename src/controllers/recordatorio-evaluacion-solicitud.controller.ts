@@ -8,31 +8,31 @@ import {
 } from '@loopback/rest';
 import {
   Recordatorio,
-  Solicitud,
+  EvaluacionSolicitud,
 } from '../models';
 import {RecordatorioRepository} from '../repositories';
 
-export class RecordatorioSolicitudController {
+export class RecordatorioEvaluacionSolicitudController {
   constructor(
     @repository(RecordatorioRepository)
     public recordatorioRepository: RecordatorioRepository,
   ) { }
 
-  @get('/recordatorios/{id}/solicitud', {
+  @get('/recordatorios/{id}/evaluacion-solicitud', {
     responses: {
       '200': {
-        description: 'Solicitud belonging to Recordatorio',
+        description: 'EvaluacionSolicitud belonging to Recordatorio',
         content: {
           'application/json': {
-            schema: {type: 'array', items: getModelSchemaRef(Solicitud)},
+            schema: {type: 'array', items: getModelSchemaRef(EvaluacionSolicitud)},
           },
         },
       },
     },
   })
-  async getSolicitud(
+  async getEvaluacionSolicitud(
     @param.path.number('id') id: typeof Recordatorio.prototype.id,
-  ): Promise<Solicitud> {
-    return this.recordatorioRepository.solicitud(id);
+  ): Promise<EvaluacionSolicitud> {
+    return this.recordatorioRepository.evaluacionSolicitud(id);
   }
 }

@@ -16,20 +16,20 @@ import {
   requestBody,
 } from '@loopback/rest';
 import {
-  Solicitud,
+  EvaluacionSolicitud,
   Recordatorio,
 } from '../models';
-import {SolicitudRepository} from '../repositories';
+import {EvaluacionSolicitudRepository} from '../repositories';
 
-export class SolicitudRecordatorioController {
+export class EvaluacionSolicitudRecordatorioController {
   constructor(
-    @repository(SolicitudRepository) protected solicitudRepository: SolicitudRepository,
+    @repository(EvaluacionSolicitudRepository) protected evaluacionSolicitudRepository: EvaluacionSolicitudRepository,
   ) { }
 
-  @get('/solicituds/{id}/recordatorios', {
+  @get('/evaluacion-solicituds/{id}/recordatorios', {
     responses: {
       '200': {
-        description: 'Array of Solicitud has many Recordatorio',
+        description: 'Array of EvaluacionSolicitud has many Recordatorio',
         content: {
           'application/json': {
             schema: {type: 'array', items: getModelSchemaRef(Recordatorio)},
@@ -42,38 +42,38 @@ export class SolicitudRecordatorioController {
     @param.path.number('id') id: number,
     @param.query.object('filter') filter?: Filter<Recordatorio>,
   ): Promise<Recordatorio[]> {
-    return this.solicitudRepository.recordatorios(id).find(filter);
+    return this.evaluacionSolicitudRepository.recordatorios(id).find(filter);
   }
 
-  @post('/solicituds/{id}/recordatorios', {
+  @post('/evaluacion-solicituds/{id}/recordatorios', {
     responses: {
       '200': {
-        description: 'Solicitud model instance',
+        description: 'EvaluacionSolicitud model instance',
         content: {'application/json': {schema: getModelSchemaRef(Recordatorio)}},
       },
     },
   })
   async create(
-    @param.path.number('id') id: typeof Solicitud.prototype.id,
+    @param.path.number('id') id: typeof EvaluacionSolicitud.prototype.id,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(Recordatorio, {
-            title: 'NewRecordatorioInSolicitud',
+            title: 'NewRecordatorioInEvaluacionSolicitud',
             exclude: ['id'],
-            optional: ['solicitudId']
+            optional: ['evaluacionSolicitudId']
           }),
         },
       },
     }) recordatorio: Omit<Recordatorio, 'id'>,
   ): Promise<Recordatorio> {
-    return this.solicitudRepository.recordatorios(id).create(recordatorio);
+    return this.evaluacionSolicitudRepository.recordatorios(id).create(recordatorio);
   }
 
-  @patch('/solicituds/{id}/recordatorios', {
+  @patch('/evaluacion-solicituds/{id}/recordatorios', {
     responses: {
       '200': {
-        description: 'Solicitud.Recordatorio PATCH success count',
+        description: 'EvaluacionSolicitud.Recordatorio PATCH success count',
         content: {'application/json': {schema: CountSchema}},
       },
     },
@@ -90,13 +90,13 @@ export class SolicitudRecordatorioController {
     recordatorio: Partial<Recordatorio>,
     @param.query.object('where', getWhereSchemaFor(Recordatorio)) where?: Where<Recordatorio>,
   ): Promise<Count> {
-    return this.solicitudRepository.recordatorios(id).patch(recordatorio, where);
+    return this.evaluacionSolicitudRepository.recordatorios(id).patch(recordatorio, where);
   }
 
-  @del('/solicituds/{id}/recordatorios', {
+  @del('/evaluacion-solicituds/{id}/recordatorios', {
     responses: {
       '200': {
-        description: 'Solicitud.Recordatorio DELETE success count',
+        description: 'EvaluacionSolicitud.Recordatorio DELETE success count',
         content: {'application/json': {schema: CountSchema}},
       },
     },
@@ -105,6 +105,6 @@ export class SolicitudRecordatorioController {
     @param.path.number('id') id: number,
     @param.query.object('where', getWhereSchemaFor(Recordatorio)) where?: Where<Recordatorio>,
   ): Promise<Count> {
-    return this.solicitudRepository.recordatorios(id).delete(where);
+    return this.evaluacionSolicitudRepository.recordatorios(id).delete(where);
   }
 }

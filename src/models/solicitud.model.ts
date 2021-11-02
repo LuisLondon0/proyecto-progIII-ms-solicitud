@@ -3,7 +3,6 @@ import {ComiteSolicitud} from './comite-solicitud.model';
 import {Comite} from './comite.model';
 import {EvaluacionSolicitud} from './evaluacion-solicitud.model';
 import {Modalidad} from './modalidad.model';
-import {Recordatorio} from './recordatorio.model';
 import {TipoSolicitud} from './tipo-solicitud.model';
 
 @model({
@@ -69,9 +68,6 @@ export class Solicitud extends Entity {
 
   @belongsTo(() => Modalidad)
   modalidadId: number;
-
-  @hasMany(() => Recordatorio)
-  recordatorios: Recordatorio[];
 
   @hasMany(() => EvaluacionSolicitud)
   evaluacionSolicitudes: EvaluacionSolicitud[];

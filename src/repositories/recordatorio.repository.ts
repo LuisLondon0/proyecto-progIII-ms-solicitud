@@ -1,8 +1,8 @@
 import {inject, Getter} from '@loopback/core';
 import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
 import {AzureDataSource} from '../datasources';
-import {Recordatorio, RecordatorioRelations, Solicitud} from '../models';
-import {SolicitudRepository} from './solicitud.repository';
+import {Recordatorio, RecordatorioRelations, EvaluacionSolicitud} from '../models';
+import {EvaluacionSolicitudRepository} from './evaluacion-solicitud.repository';
 
 export class RecordatorioRepository extends DefaultCrudRepository<
   Recordatorio,
@@ -10,13 +10,13 @@ export class RecordatorioRepository extends DefaultCrudRepository<
   RecordatorioRelations
 > {
 
-  public readonly solicitud: BelongsToAccessor<Solicitud, typeof Recordatorio.prototype.id>;
+  public readonly evaluacionSolicitud: BelongsToAccessor<EvaluacionSolicitud, typeof Recordatorio.prototype.id>;
 
   constructor(
-    @inject('datasources.Azure') dataSource: AzureDataSource, @repository.getter('SolicitudRepository') protected solicitudRepositoryGetter: Getter<SolicitudRepository>,
+    @inject('datasources.Azure') dataSource: AzureDataSource, @repository.getter('EvaluacionSolicitudRepository') protected evaluacionSolicitudRepositoryGetter: Getter<EvaluacionSolicitudRepository>,
   ) {
     super(Recordatorio, dataSource);
-    this.solicitud = this.createBelongsToAccessorFor('solicitud', solicitudRepositoryGetter,);
-    this.registerInclusionResolver('solicitud', this.solicitud.inclusionResolver);
+    this.evaluacionSolicitud = this.createBelongsToAccessorFor('evaluacionSolicitud', evaluacionSolicitudRepositoryGetter,);
+    this.registerInclusionResolver('evaluacionSolicitud', this.evaluacionSolicitud.inclusionResolver);
   }
 }

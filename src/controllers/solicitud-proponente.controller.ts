@@ -1,50 +1,90 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {SolicitudProponente} from '../models';
-import {SolicitudProponenteRepository} from '../repositories';
+import {Configuracion} from '../llaves/configuracion';
+import {CorreoNotificacion, ProponenteSolicitud, SolicitudProponente} from '../models';
+import {ModalidadRepository, SolicitudProponenteRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
+import {NotificacionesService} from '../services';
 
 export class SolicitudProponenteController {
   constructor(
     @repository(SolicitudProponenteRepository)
-    public solicitudProponenteRepository : SolicitudProponenteRepository,
-  ) {}
+    public solicitudProponenteRepository: SolicitudProponenteRepository,
+    @repository(SolicitudRepository)
+    public solicitudRepository: SolicitudRepository,
+    @repository(ModalidadRepository)
+    public modalidadRepository: ModalidadRepository,
+    @repository(TipoSolicitudRepository)
+    public tipoSolicitudRepository: TipoSolicitudRepository,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
+  ) { }
 
-  @post('/solicitud-proponentes')
-  @response(200, {
-    description: 'SolicitudProponente model instance',
-    content: {'application/json': {schema: getModelSchemaRef(SolicitudProponente)}},
+  @post('/solicitud-proponentes', {
+    responses: {
+      '200': {
+        description: 'create a Solicitud model instance',
+        content: {'application/json': {schema: getModelSchemaRef(SolicitudProponente)}},
+      },
+    },
   })
   async create(
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(SolicitudProponente, {
-            title: 'NewSolicitudProponente',
-            exclude: ['id'],
+          schema: getModelSchemaRef(ProponenteSolicitud, {
+            title: 'NewSolicitudInComite'
           }),
         },
       },
-    })
-    solicitudProponente: Omit<SolicitudProponente, 'id'>,
-  ): Promise<SolicitudProponente> {
-    return this.solicitudProponenteRepository.create(solicitudProponente);
+    }) ProponenteSolicitud: ProponenteSolicitud,
+  ): Promise<object> {
+    let solicitud = {
+      fecha: ProponenteSolicitud.fecha,
+      nombreTrabajo: ProponenteSolicitud.nombreTrabajo,
+      modalidadId: ProponenteSolicitud.modalidad,
+      areaInvestigacionId: ProponenteSolicitud.areaInvestigacionId,
+      archivoZip: ProponenteSolicitud.archivoZip,
+      descripcion: ProponenteSolicitud.descripcion,
+      tipoSolicitudId: ProponenteSolicitud.tipoSolicitudId
+    }
+    let creado = await this.solicitudRepository.create(solicitud);
+
+    let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
+    let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
+
+    /**
+     * Buscar proponente por el ID enviado en (ProponenteSolicitud.proponenteId)
+     * para obtener el correo y demas datos
+     * Buscar area de investigacion por el ID enviado en (ProponenteSolicitud.areaInvestigacionId)
+     * para obtener el nombre del area
+     */
+    let datos = new CorreoNotificacion();
+    datos.destinatario = "luis.1701814700@ucaldas.edu.co";
+    datos.asunto = Configuracion.asuntoCreacionSolicitud;
+    datos.mensaje = `Hola Luis <br/>${Configuracion.mensajeSolicitudCreada} <br/>Fecha: ${solicitud.fecha}<br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: Ciencias<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}<br/>Material: ${solicitud.archivoZip}`
+
+    this.servicioNotificaciones.EnviarCorreo(datos);
+
+    let solicitudProponente = {
+      proponenteId: ProponenteSolicitud.proponenteId,
+      solicitudId: creado.getId()
+    }
+    let solicitudProponenteCreado = await this.solicitudProponenteRepository.create(solicitudProponente)
+
+
+    return solicitudProponenteCreado;
   }
 
   @get('/solicitud-proponentes/count')

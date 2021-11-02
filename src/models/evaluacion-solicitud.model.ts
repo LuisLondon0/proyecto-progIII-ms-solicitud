@@ -1,4 +1,5 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {Recordatorio} from './recordatorio.model';
 import {ResultadoEvaluacion} from './resultado-evaluacion.model';
 import {Solicitud} from './solicitud.model';
 
@@ -48,6 +49,9 @@ export class EvaluacionSolicitud extends Entity {
 
   @hasMany(() => ResultadoEvaluacion)
   resultadoEvaluaciones: ResultadoEvaluacion[];
+
+  @hasMany(() => Recordatorio)
+  recordatorios: Recordatorio[];
 
   constructor(data?: Partial<EvaluacionSolicitud>) {
     super(data);

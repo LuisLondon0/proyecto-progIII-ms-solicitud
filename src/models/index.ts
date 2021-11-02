@@ -10,3 +10,6 @@ export * from './solicitud.model';
 export * from './tipo-solicitud.model';
 
 
+export * from './proponente-solicitud.model';
+export * from './correo-notificacion.model';
+export * from './evaluacion-jurado.model';
