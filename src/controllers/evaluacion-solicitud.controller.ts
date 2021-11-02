@@ -169,19 +169,31 @@ export class EvaluacionSolicitudController {
     aceptarRechazarSolicitud: AceptarRechazarSolicitud,
   ): Promise<void> {
     let evaluacion = await this.evaluacionSolicitudRepository.findById(aceptarRechazarSolicitud.id)
+    /*
+    let get = await this.solicitudProponenteRepository.findOne({
+      where: {
+        solicitudId: evaluacion.solicitudId
+      }
+    })
+    let proponente
+    if (get) {
+      proponente = this.servicioNotificaciones.GetProponente(get.proponenteId);
+    }
 
-    //let get = await this.solicitudProponenteRepository.findById(evaluacion.solicitudId)
-    //let proponente = this.servicioNotificaciones.GetProponente(get.proponenteId);
-    //console.log(`Proponente: ${proponente}`)
-
+    console.log(`Proponente: ${proponente}`)
+    */
     let solicitud = await this.solicitudRepository.findById(aceptarRechazarSolicitud.id)
 
     let datos = new CorreoNotificacion();
     datos.destinatario = "luis.1701814700@ucaldas.edu.co";
-    let nombre = "Luis"
-    //datos.destinatario = proponente.correo;
-    //let nombre = proponente.primerNombre;
+    /*
+    if (proponente) {
+      datos.destinatario = proponente.correo;
+    }
 
+    let nombre = proponente.primerNombre;
+    */
+    let nombre = "Luis"
     let answer = ""
 
     if (aceptarRechazarSolicitud.respuesta == 1) {

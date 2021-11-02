@@ -1,30 +1,29 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {Recordatorio} from '../models';
+import {Configuracion} from '../llaves/configuracion';
+import {CorreoNotificacion, NotificacionSms, Recordatorio} from '../models';
 import {RecordatorioRepository} from '../repositories';
+import {NotificacionesService} from '../services';
 
 export class RecordatorioController {
   constructor(
     @repository(RecordatorioRepository)
-    public recordatorioRepository : RecordatorioRepository,
-  ) {}
+    public recordatorioRepository: RecordatorioRepository,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
+  ) { }
 
   @post('/recordatorios')
   @response(200, {
@@ -44,7 +43,27 @@ export class RecordatorioController {
     })
     recordatorio: Omit<Recordatorio, 'id'>,
   ): Promise<Recordatorio> {
-    return this.recordatorioRepository.create(recordatorio);
+    let creado = await this.recordatorioRepository.create(recordatorio);
+
+    switch (creado.tipo) {
+      case "Correo":
+        let datos = new CorreoNotificacion();
+        datos.destinatario = "luis.1701814700@ucaldas.edu.co";
+        datos.asunto = Configuracion.asuntoRecordatorio;
+        datos.mensaje = `Hola Luis <br/>${Configuracion.mensajeRecordatorio}`
+
+        this.servicioNotificaciones.EnviarCorreo(datos);
+        break;
+
+      case "SMS":
+        let sms = new NotificacionSms();
+        sms.destino = "3207027958";
+        sms.mensaje = `Hola Luis <br/>${Configuracion.mensajeRecordatorio}`
+
+        this.servicioNotificaciones.EnviarSms(sms);
+        break;
+    }
+    return creado;
   }
 
   @get('/recordatorios/count')

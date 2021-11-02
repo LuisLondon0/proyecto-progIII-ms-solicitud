@@ -15,3 +15,4 @@ export * from './tipo-solicitud.model';
 
 
 
+export * from './notificacion-sms.model';
