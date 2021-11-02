@@ -1,30 +1,33 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {EvaluacionSolicitud} from '../models';
-import {EvaluacionSolicitudRepository} from '../repositories';
+import {Configuracion} from '../llaves/configuracion';
+import {AceptarRechazarSolicitud, CorreoNotificacion, EvaluacionSolicitud} from '../models';
+import {EvaluacionSolicitudRepository, SolicitudProponenteRepository, SolicitudRepository} from '../repositories';
+import {NotificacionesService} from '../services';
 
 export class EvaluacionSolicitudController {
   constructor(
     @repository(EvaluacionSolicitudRepository)
-    public evaluacionSolicitudRepository : EvaluacionSolicitudRepository,
-  ) {}
+    public evaluacionSolicitudRepository: EvaluacionSolicitudRepository,
+    @repository(SolicitudProponenteRepository)
+    public solicitudProponenteRepository: SolicitudProponenteRepository,
+    @repository(SolicitudRepository)
+    public solicitudRepository: SolicitudRepository,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
+  ) { }
 
   @post('/evaluacion-solicitudes')
   @response(200, {
@@ -146,5 +149,61 @@ export class EvaluacionSolicitudController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.evaluacionSolicitudRepository.deleteById(id);
+  }
+
+  @post('/aceptar-rechazar-solicitud')
+  @response(200, {
+    description: 'Aceptar o rechazar la solicitud',
+    content: {'application/json': {schema: getModelSchemaRef(EvaluacionSolicitud)}},
+  })
+  async aceptarRechazarSolicitud(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(AceptarRechazarSolicitud, {
+            title: 'Respuesta Invitacion'
+          }),
+        },
+      },
+    })
+    aceptarRechazarSolicitud: AceptarRechazarSolicitud,
+  ): Promise<void> {
+    let evaluacion = await this.evaluacionSolicitudRepository.findById(aceptarRechazarSolicitud.id)
+
+    //let get = await this.solicitudProponenteRepository.findById(evaluacion.solicitudId)
+    //let proponente = this.servicioNotificaciones.GetProponente(get.proponenteId);
+    //console.log(`Proponente: ${proponente}`)
+
+    let solicitud = await this.solicitudRepository.findById(aceptarRechazarSolicitud.id)
+
+    let datos = new CorreoNotificacion();
+    datos.destinatario = "luis.1701814700@ucaldas.edu.co";
+    let nombre = "Luis"
+    //datos.destinatario = proponente.correo;
+    //let nombre = proponente.primerNombre;
+
+    let answer = ""
+
+    if (aceptarRechazarSolicitud.respuesta == 1) {
+      datos.asunto = Configuracion.asuntoAceptarSolicitud;
+      datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeAceptarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Aceptada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
+
+      answer = "Aceptada"
+    }
+    else {
+      datos.asunto = Configuracion.asuntoRechazarSolicitud;
+      datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeRechazarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Rechazada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
+
+      answer = "Rechazada"
+    }
+
+    this.servicioNotificaciones.EnviarCorreo(datos);
+
+    let data = {
+      fechaRespuesta: aceptarRechazarSolicitud.fecha,
+      respuesta: answer,
+      observaciones: aceptarRechazarSolicitud.observaciones
+    }
+    return await this.evaluacionSolicitudRepository.updateById(aceptarRechazarSolicitud.id, data);
   }
 }

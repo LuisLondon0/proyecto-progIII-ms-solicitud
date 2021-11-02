@@ -14,4 +14,24 @@ export class NotificacionesService {
         console.log(res.text())
       })
   }
+
+  GetProponente(id: number) {
+    let url = `${Configuracion.urlGetProponente}/${id}`;
+    fetch(url)
+      .then((res: any) => {
+        console.log(res.text())
+        return res.text();
+      })
+    return ""
+  }
+
+  GetJurado(id: number) {
+    let url = `${Configuracion.urlGetJurado}/${id}`;
+    fetch(url)
+      .then((res: any) => {
+        console.log(res.text())
+        return res
+      })
+    return ""
+  }
 }
