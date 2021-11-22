@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {Configuracion} from '../llaves/configuracion';
-import {CorreoNotificacion, NotificacionSms} from '../models';
+import {CorreoNotificacion, Jurado, NotificacionSms} from '../models';
 const fetch = require('node-fetch');
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -33,13 +33,23 @@ export class NotificacionesService {
     return ""
   }
 
-  GetJurado(id: number) {
-    let url = `${Configuracion.urlGetJurado}/${id}`;
-    fetch(url)
-      .then((res: any) => {
-        console.log(res.text())
-        return res
-      })
-    return ""
+  async GetJurado(id: number): Promise<Jurado | undefined> {
+    let url = `${Configuracion.urlGetJurado}${id}`;
+    let jurado;
+
+    await fetch(url)
+      .then((res: {json: () => any;}) => res.json())
+      .then((json: any) => {
+        if (!json.error) {
+          jurado = new Jurado();
+          jurado.id = json.id;
+          jurado.nombre = json.nombre;
+          jurado.apellidos = json.apellidos;
+          jurado.correo = json.correo;
+          jurado.entidad = json.entidad;
+          jurado.telefono = json.telefono;
+        }
+      });
+    return jurado
   }
 }
