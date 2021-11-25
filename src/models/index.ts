@@ -20,3 +20,4 @@ export * from './arreglo-proponentes.model';
 export * from './arreglo-evaluaciones.model';
 export * from './arreglo-solicitudes.model';
 export * from './jurado.model';
+export * from './proponente.model';

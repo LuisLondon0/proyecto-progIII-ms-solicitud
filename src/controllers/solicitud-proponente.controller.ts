@@ -9,7 +9,7 @@ import {
 } from '@loopback/repository';
 import {
   del, get,
-  getModelSchemaRef, param, patch, post, put, requestBody,
+  getModelSchemaRef, HttpErrors, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
@@ -51,42 +51,41 @@ export class SolicitudProponenteController {
         },
       },
     }) ProponenteSolicitud: ProponenteSolicitud,
-  ): Promise<object> {
-    let solicitud = {
-      fecha: ProponenteSolicitud.fecha,
-      nombreTrabajo: ProponenteSolicitud.nombreTrabajo,
-      modalidadId: ProponenteSolicitud.modalidad,
-      areaInvestigacionId: ProponenteSolicitud.areaInvestigacionId,
-      archivoZip: ProponenteSolicitud.archivoZip,
-      descripcion: ProponenteSolicitud.descripcion,
-      tipoSolicitudId: ProponenteSolicitud.tipoSolicitudId
+  ): Promise<SolicitudProponente> {
+    let proponente = await this.servicioNotificaciones.GetProponente(ProponenteSolicitud.proponenteId)
+    if (proponente) {
+      let solicitud = {
+        fecha: ProponenteSolicitud.fecha,
+        nombreTrabajo: ProponenteSolicitud.nombreTrabajo,
+        modalidadId: ProponenteSolicitud.modalidad,
+        areaInvestigacionId: ProponenteSolicitud.areaInvestigacionId,
+        archivoZip: ProponenteSolicitud.archivoZip,
+        descripcion: ProponenteSolicitud.descripcion,
+        tipoSolicitudId: ProponenteSolicitud.tipoSolicitudId
+      }
+      let creado = await this.solicitudRepository.create(solicitud);
+
+      let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
+      let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
+
+      let datos = new CorreoNotificacion();
+      datos.destinatario = proponente.correo;
+      datos.asunto = Configuracion.asuntoCreacionSolicitud;
+      datos.mensaje = `Hola ${proponente.primerNombre} <br/>${Configuracion.mensajeSolicitudCreada} <br/>Fecha: ${solicitud.fecha}<br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: Ciencias<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}<br/>Material: ${solicitud.archivoZip}`
+
+      this.servicioNotificaciones.EnviarCorreo(datos);
+
+      let solicitudProponente = {
+        proponenteId: ProponenteSolicitud.proponenteId,
+        solicitudId: creado.getId()
+      }
+      let solicitudProponenteCreado = await this.solicitudProponenteRepository.create(solicitudProponente)
+
+
+      return solicitudProponenteCreado;
+
     }
-    let creado = await this.solicitudRepository.create(solicitud);
-
-    let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
-    let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
-
-    /**
-     * Buscar proponente por el ID enviado en (ProponenteSolicitud.proponenteId)
-     * para obtener el correo y demas datos
-     * Buscar area de investigacion por el ID enviado en (ProponenteSolicitud.areaInvestigacionId)
-     * para obtener el nombre del area
-     */
-    let datos = new CorreoNotificacion();
-    datos.destinatario = "luis.1701814700@ucaldas.edu.co";
-    datos.asunto = Configuracion.asuntoCreacionSolicitud;
-    datos.mensaje = `Hola Luis <br/>${Configuracion.mensajeSolicitudCreada} <br/>Fecha: ${solicitud.fecha}<br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: Ciencias<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}<br/>Material: ${solicitud.archivoZip}`
-
-    this.servicioNotificaciones.EnviarCorreo(datos);
-
-    let solicitudProponente = {
-      proponenteId: ProponenteSolicitud.proponenteId,
-      solicitudId: creado.getId()
-    }
-    let solicitudProponenteCreado = await this.solicitudProponenteRepository.create(solicitudProponente)
-
-
-    return solicitudProponenteCreado;
+    throw new HttpErrors[404](`Entity not found: Proponente with id ${ProponenteSolicitud.proponenteId}`)
   }
 
   @get('/solicitud-proponentes/count')
@@ -222,6 +221,7 @@ export class SolicitudProponenteController {
             proponenteId: proponenteId,
             solicitudId: solicitudId
           })
+
         }
       })
       return true

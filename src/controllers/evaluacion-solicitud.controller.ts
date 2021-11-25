@@ -9,7 +9,7 @@ import {
 } from '@loopback/repository';
 import {
   del, get,
-  getModelSchemaRef, param, patch, post, put, requestBody,
+  getModelSchemaRef, HttpErrors, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
@@ -169,55 +169,52 @@ export class EvaluacionSolicitudController {
       },
     })
     aceptarRechazarSolicitud: AceptarRechazarSolicitud,
-  ): Promise<void> {
+  ): Promise<EvaluacionSolicitud | void> {
     let evaluacion = await this.evaluacionSolicitudRepository.findById(aceptarRechazarSolicitud.id)
-    /*
-    let get = await this.solicitudProponenteRepository.findOne({
-      where: {
-        solicitudId: evaluacion.solicitudId
+    if (evaluacion.respuesta == null) {
+      let solicitud = await this.solicitudRepository.findById(evaluacion.solicitudId)
+
+      let get = await this.solicitudProponenteRepository.find({
+        where: {
+          solicitudId: evaluacion.solicitudId
+        }
+      })
+      let answer = ""
+
+      if (get.length > 0) {
+        for await (let solicitudP of get) {
+          let proponente = await this.servicioNotificaciones.GetProponente(solicitudP.proponenteId)
+          if (proponente) {
+            let datos = new CorreoNotificacion();
+            datos.destinatario = proponente.correo;
+
+            let nombre = proponente.primerNombre
+
+            if (aceptarRechazarSolicitud.respuesta == 1) {
+              datos.asunto = Configuracion.asuntoAceptarSolicitud;
+              datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeAceptarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Aceptada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
+
+              answer = "Aceptada"
+            }
+            else {
+              datos.asunto = Configuracion.asuntoRechazarSolicitud;
+              datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeRechazarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Rechazada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
+
+              answer = "Rechazada"
+            }
+
+            this.servicioNotificaciones.EnviarCorreo(datos);
+          }
+        }
+        let data = {
+          fechaRespuesta: aceptarRechazarSolicitud.fecha,
+          respuesta: answer,
+          observaciones: aceptarRechazarSolicitud.observaciones
+        }
+        await this.evaluacionSolicitudRepository.updateById(aceptarRechazarSolicitud.id, data);
+        return this.evaluacionSolicitudRepository.findById(aceptarRechazarSolicitud.id)
       }
-    })
-    let proponente
-    if (get) {
-      proponente = this.servicioNotificaciones.GetProponente(get.proponenteId);
     }
-
-    console.log(`Proponente: ${proponente}`)
-    */
-    let solicitud = await this.solicitudRepository.findById(aceptarRechazarSolicitud.id)
-
-    let datos = new CorreoNotificacion();
-    datos.destinatario = "luis.1701814700@ucaldas.edu.co";
-    /*
-    if (proponente) {
-      datos.destinatario = proponente.correo;
-    }
-
-    let nombre = proponente.primerNombre;
-    */
-    let nombre = "Luis"
-    let answer = ""
-
-    if (aceptarRechazarSolicitud.respuesta == 1) {
-      datos.asunto = Configuracion.asuntoAceptarSolicitud;
-      datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeAceptarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Aceptada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
-
-      answer = "Aceptada"
-    }
-    else {
-      datos.asunto = Configuracion.asuntoRechazarSolicitud;
-      datos.mensaje = `Hola ${nombre} <br/>${Configuracion.mensajeRechazarSolicitud} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Fecha invitacion: ${evaluacion.fechaInvitacion}<br/>Fecha Respuesta: ${aceptarRechazarSolicitud.fecha}<br/>Respuesta: Rechazada<br/>Observaciones: ${aceptarRechazarSolicitud.observaciones}`
-
-      answer = "Rechazada"
-    }
-
-    this.servicioNotificaciones.EnviarCorreo(datos);
-
-    let data = {
-      fechaRespuesta: aceptarRechazarSolicitud.fecha,
-      respuesta: answer,
-      observaciones: aceptarRechazarSolicitud.observaciones
-    }
-    return await this.evaluacionSolicitudRepository.updateById(aceptarRechazarSolicitud.id, data);
+    throw new HttpErrors[400](`La evaluacion ${evaluacion.id} ya ha sido calificada `)
   }
 }

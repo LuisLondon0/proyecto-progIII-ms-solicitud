@@ -57,13 +57,13 @@ export class JuradoEvaluacionController {
       fechaInvitacion: EvaluacionJurado.fechaInvitacion
     }
     let solicitud = await this.solicitudRepository.findById(EvaluacionJurado.solicitudId);
-    let creado = await this.evaluacionSolicitudRepository.create(evaluacion);
     let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
     let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
 
     let jurado = await this.servicioNotificaciones.GetJurado(EvaluacionJurado.juradoId);
 
     if (jurado) {
+      let creado = await this.evaluacionSolicitudRepository.create(evaluacion);
       let datos = new CorreoNotificacion();
       datos.destinatario = jurado.correo;
       datos.asunto = Configuracion.asuntoInvitacionEvaluacion;
