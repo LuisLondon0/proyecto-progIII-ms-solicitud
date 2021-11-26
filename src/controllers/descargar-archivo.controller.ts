@@ -24,7 +24,7 @@ export class DescargarArchivoController {
    * @param type
    * @param id
    */
-  @get('/archivos', {
+  @get('/archivosZip', {
     responses: {
       200: {
         content: {
@@ -49,15 +49,65 @@ export class DescargarArchivoController {
     return archivos;
   }
 
+  @get('/formatosDiligenciados', {
+    responses: {
+      200: {
+        content: {
+          // string[]
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        description: 'A list of files',
+      },
+    },
+  })
+  async listarFormatosDiligenciados(): Promise<Object[]> {
+    //const rutaCarpeta = this.ObtenerRutaDeCarpetaPorTipo(type);
+    const rutaFormatoDiligenciado = path.join(__dirname, llaves.carpetaFormatosDiligenciados);
+    const formatosDiligenciados = await readdir(rutaFormatoDiligenciado);
+    return formatosDiligenciados;
+  }
+
+  @get('/formatos', {
+    responses: {
+      200: {
+        content: {
+          // string[]
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        description: 'A list of files',
+      },
+    },
+  })
+  async listarFormatos(): Promise<Object[]> {
+    //const rutaCarpeta = this.ObtenerRutaDeCarpetaPorTipo(type);
+    const rutaFormato = path.join(__dirname, llaves.carpetaFormatos);
+    const formatos = await readdir(rutaFormato);
+    return formatos;
+  }
+
   /**
    *
    * @param type
    * @param recordId
    * @param response
    */
-  @get('/archivo/{filename}')
+  @get('/archivoZip/{filename}')
   @oas.response.file()
-  async descargarArchivo(
+  async descargarArchivoZip(
     @param.path.string('filename') filename: string,
     @inject(RestBindings.Http.RESPONSE) response: Response,
   ) {
@@ -65,6 +115,32 @@ export class DescargarArchivoController {
     const rutaArchivoZip = path.join(__dirname, llaves.carpetaArchivoZip);
     const archivo = this.ValidarNombreArchivo(rutaArchivoZip, filename);
     response.download(archivo, rutaArchivoZip);
+    return response;
+  }
+
+  @get('/formatosDiligenciados/{filename}')
+  @oas.response.file()
+  async descargarFormatoDiligenciado(
+    @param.path.string('filename') filename: string,
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+  ) {
+    //const rutaCarpeta = this.ObtenerRutaDeCarpetaPorTipo(type);
+    const rutaFormatoDiligenciado = path.join(__dirname, llaves.carpetaFormatosDiligenciados);
+    const formatoDiligenciado = this.ValidarNombreArchivo(rutaFormatoDiligenciado, filename);
+    response.download(formatoDiligenciado, rutaFormatoDiligenciado);
+    return response;
+  }
+
+  @get('/formatos/{filename}')
+  @oas.response.file()
+  async descargarFormato(
+    @param.path.string('filename') filename: string,
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+  ) {
+    //const rutaCarpeta = this.ObtenerRutaDeCarpetaPorTipo(type);
+    const rutaFormato = path.join(__dirname, llaves.carpetaFormatos);
+    const formato = this.ValidarNombreArchivo(rutaFormato, filename);
+    response.download(formato, rutaFormato);
     return response;
   }
 

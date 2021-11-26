@@ -4,6 +4,7 @@ export namespace Configuracion {
   export const urlCorreo = "http://localhost:5000/correo"
   export const urlMensajeTexto = "http://localhost:5000/sms"
   export const urlGetProponente = "http://localhost:3000/proponente-trabajos/"
+  export const urlGetLineaInvestigacion = "http://localhost:3002/linea-investigacions/"
   export const urlGetJurado = "http://localhost:3002/jurados/"
   export const asuntoCreacionSolicitud = "Su solicitud se creó satisfactoriamente"
   export const destinoArg = "destino"

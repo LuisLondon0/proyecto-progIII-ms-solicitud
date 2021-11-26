@@ -14,7 +14,7 @@ import {
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
 import {AceptarRechazarSolicitud, CorreoNotificacion, EvaluacionSolicitud} from '../models';
-import {EvaluacionSolicitudRepository, SolicitudProponenteRepository, SolicitudRepository} from '../repositories';
+import {EvaluacionSolicitudRepository, ModalidadRepository, SolicitudProponenteRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
 //@authenticate("admin")
@@ -26,6 +26,10 @@ export class EvaluacionSolicitudController {
     public solicitudProponenteRepository: SolicitudProponenteRepository,
     @repository(SolicitudRepository)
     public solicitudRepository: SolicitudRepository,
+    @repository(ModalidadRepository)
+    public modalidadRepository: ModalidadRepository,
+    @repository(TipoSolicitudRepository)
+    public tipoSolicitudRepository: TipoSolicitudRepository,
     @service(NotificacionesService)
     public servicioNotificaciones: NotificacionesService,
   ) { }
@@ -48,8 +52,30 @@ export class EvaluacionSolicitudController {
     })
     evaluacionSolicitud: Omit<EvaluacionSolicitud, 'id'>,
   ): Promise<EvaluacionSolicitud> {
-    return this.evaluacionSolicitudRepository.create(evaluacionSolicitud);
+    let solicitud = await this.solicitudRepository.findById(evaluacionSolicitud.solicitudId);
+    let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
+    let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
+
+    let lineaInvestigacion = await this.servicioNotificaciones.GetLineaInvestigacion(solicitud.areaInvestigacionId);
+    let jurado = await this.servicioNotificaciones.GetJurado(evaluacionSolicitud.juradoId);
+
+    if (lineaInvestigacion) {
+      if (jurado) {
+        let creado = await this.evaluacionSolicitudRepository.create(evaluacionSolicitud);
+        let datos = new CorreoNotificacion();
+        datos.destinatario = jurado.correo;
+        datos.asunto = Configuracion.asuntoInvitacionEvaluacion;
+        datos.mensaje = `Hola ${jurado.nombre} <br/>${Configuracion.mensajeInvitacionEvaluacion} <br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: ${lineaInvestigacion.nombre}<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}`
+
+        this.servicioNotificaciones.EnviarCorreo(datos);
+
+        return creado;
+      }
+      throw new HttpErrors[404](`Entity not found: Jurado with id ${evaluacionSolicitud.juradoId}`)
+    }
+    throw new HttpErrors[404](`Entity not found: Linea Investigacion with id ${solicitud.areaInvestigacionId}`)
   }
+
 
   @get('/evaluacion-solicitudes/count')
   @response(200, {

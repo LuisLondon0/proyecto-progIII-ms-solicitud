@@ -44,6 +44,11 @@ export class EvaluacionSolicitud extends Entity {
   })
   observaciones?: string;
 
+  @property({
+    type: 'number',
+  })
+  juradoId: number
+
   @belongsTo(() => Solicitud)
   solicitudId: number;
 

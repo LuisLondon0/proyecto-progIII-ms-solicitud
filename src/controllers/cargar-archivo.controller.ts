@@ -10,13 +10,17 @@ import {
 import multer from 'multer';
 import path from 'path';
 import {Keys as llaves} from '../config/keys';
-import {SolicitudRepository} from '../repositories';
+import {ResultadoEvaluacionRepository, SolicitudRepository, TipoSolicitudRepository} from '../repositories';
 
 //@authenticate("admin")
 export class CargarArchivoController {
   constructor(
     @repository(SolicitudRepository)
-    private solicitudRepository: SolicitudRepository
+    private solicitudRepository: SolicitudRepository,
+    @repository(TipoSolicitudRepository)
+    private tipoSolicitudRepository: TipoSolicitudRepository,
+    @repository(ResultadoEvaluacionRepository)
+    private resultadoEvaluacionRepository: ResultadoEvaluacionRepository,
   ) { }
 
 
@@ -54,6 +58,74 @@ export class CargarArchivoController {
           archivoZip: nombre_archivo
         }
         await this.solicitudRepository.updateById(solicitudId, data);
+        return {filename: nombre_archivo};
+      }
+    }
+    return res;
+  }
+
+  @post('/CargaFormato/{tipoSolicitudId}', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Función de carga de formatos al tipo de solicitud.',
+      },
+    },
+  })
+  async CargaFormato(
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @requestBody.file() request: Request,
+    @param.path.number("tipoSolicitudId") tipoSolicitudId: number
+  ): Promise<object | false> {
+    const rutaFormato = path.join(__dirname, llaves.carpetaFormatos);
+    let res = await this.StoreFileToPath(rutaFormato, llaves.nombreCampoFormato, request, response, llaves.extensionesPermitidasFormato);
+    if (res) {
+      const nombre_archivo = response.req?.file?.filename;
+      if (nombre_archivo) {
+        let data = {
+          formato: nombre_archivo
+        }
+        await this.tipoSolicitudRepository.updateById(tipoSolicitudId, data);
+        return {filename: nombre_archivo};
+      }
+    }
+    return res;
+  }
+
+  @post('/CargaFormatoDiligenciado/{resultadoEvaluacionId}', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Función de carga de formato diligenciado a la respuesta.',
+      },
+    },
+  })
+  async CargaFormatoDiligenciado(
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @requestBody.file() request: Request,
+    @param.path.number("resultadoEvaluacionId") resultadoEvaluacionId: number
+  ): Promise<object | false> {
+    const rutaFormatoDiligenciado = path.join(__dirname, llaves.carpetaFormatosDiligenciados);
+    let res = await this.StoreFileToPath(rutaFormatoDiligenciado, llaves.nombreCampoFormatoDiligenciado, request, response, llaves.extensionesPermitidasFormatoDiligenciado);
+    if (res) {
+      const nombre_archivo = response.req?.file?.filename;
+      if (nombre_archivo) {
+        let data = {
+          formatoDiligenciado: nombre_archivo
+        }
+        await this.resultadoEvaluacionRepository.updateById(resultadoEvaluacionId, data);
         return {filename: nombre_archivo};
       }
     }

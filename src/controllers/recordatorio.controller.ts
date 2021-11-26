@@ -14,7 +14,7 @@ import {
 } from '@loopback/rest';
 import {Configuracion} from '../llaves/configuracion';
 import {CorreoNotificacion, NotificacionSms, Recordatorio} from '../models';
-import {EvaluacionSolicitudRepository, JuradoEvaluacionRepository, RecordatorioRepository} from '../repositories';
+import {EvaluacionSolicitudRepository, RecordatorioRepository} from '../repositories';
 import {NotificacionesService} from '../services';
 
 //@authenticate("admin")
@@ -24,8 +24,6 @@ export class RecordatorioController {
     public recordatorioRepository: RecordatorioRepository,
     @repository(EvaluacionSolicitudRepository)
     public evaluacionSolicitudRepository: EvaluacionSolicitudRepository,
-    @repository(JuradoEvaluacionRepository)
-    public juradoEvaluacionRepository: JuradoEvaluacionRepository,
     @service(NotificacionesService)
     public servicioNotificaciones: NotificacionesService,
   ) { }
@@ -51,40 +49,31 @@ export class RecordatorioController {
     let evaluacion = await this.evaluacionSolicitudRepository.findById(recordatorio.evaluacionSolicitudId);
 
     if (evaluacion.respuesta == null) {
-      let get = await this.juradoEvaluacionRepository.findOne({
-        where: {
-          evaluacionId: evaluacion.id
+      let jurado = await this.servicioNotificaciones.GetJurado(evaluacion.juradoId);
+
+      if (jurado) {
+        let creado = await this.recordatorioRepository.create(recordatorio);
+        switch (creado.tipo) {
+          case "Correo":
+            let datos = new CorreoNotificacion();
+            datos.destinatario = jurado.correo;
+            datos.asunto = Configuracion.asuntoRecordatorio;
+            datos.mensaje = `Hola ${jurado.nombre} <br/>${Configuracion.mensajeRecordatorio}`
+
+            this.servicioNotificaciones.EnviarCorreo(datos);
+            break;
+
+          case "SMS":
+            let sms = new NotificacionSms();
+            sms.destino = "3207027958";
+            sms.mensaje = `Hola Luis <br/>${Configuracion.mensajeRecordatorio}`
+
+            this.servicioNotificaciones.EnviarSms(sms);
+            break;
         }
-      })
-
-      if (get) {
-        let jurado = await this.servicioNotificaciones.GetJurado(get.juradoId);
-
-        if (jurado) {
-          let creado = await this.recordatorioRepository.create(recordatorio);
-          switch (creado.tipo) {
-            case "Correo":
-              let datos = new CorreoNotificacion();
-              datos.destinatario = jurado.correo;
-              datos.asunto = Configuracion.asuntoRecordatorio;
-              datos.mensaje = `Hola ${jurado.nombre} <br/>${Configuracion.mensajeRecordatorio}`
-
-              this.servicioNotificaciones.EnviarCorreo(datos);
-              break;
-
-            case "SMS":
-              let sms = new NotificacionSms();
-              sms.destino = "3207027958";
-              sms.mensaje = `Hola Luis <br/>${Configuracion.mensajeRecordatorio}`
-
-              this.servicioNotificaciones.EnviarSms(sms);
-              break;
-          }
-          return creado;
-        }
-        throw new HttpErrors[404](`Entity not found: Jurado with id ${get.juradoId}`)
+        return creado;
       }
-      throw new HttpErrors[404](`Entity not found: Evaluacion with id ${evaluacion.id}`)
+      throw new HttpErrors[404](`Entity not found: Jurado with id ${evaluacion.juradoId}`)
     }
     throw new HttpErrors[400](`La evaluacion con id ${evaluacion.id}, ya fue calificada`)
   }
