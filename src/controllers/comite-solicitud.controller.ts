@@ -18,23 +18,24 @@ import {
 import {
   Comite, ComiteSolicitud, Solicitud
 } from '../models';
-import {ArregloSolicitudes} from '../models/arreglo-solicitudes.model';
-import {ComiteRepository, ComiteSolicitudRepository} from '../repositories';
+import {ArregloComites} from '../models/arreglo-comites.model';
+import {ComiteRepository, ComiteSolicitudRepository, SolicitudRepository} from '../repositories';
 
 //@authenticate("admin")
 export class ComiteSolicitudController {
   constructor(
     @repository(ComiteRepository) protected comiteRepository: ComiteRepository,
+    @repository(SolicitudRepository) protected solicitudRepository: SolicitudRepository,
     @repository(ComiteSolicitudRepository) protected comiteSolicitudRepository: ComiteSolicitudRepository,
   ) { }
 
-  @get('/comites/{id}/solicituds', {
+  @get('/solicitud/{id}/comites', {
     responses: {
       '200': {
         description: 'Array of Comite has many Solicitud through ComiteSolicitud',
         content: {
           'application/json': {
-            schema: {type: 'array', items: getModelSchemaRef(Solicitud)},
+            schema: {type: 'array', items: getModelSchemaRef(Comite)},
           },
         },
       },
@@ -42,9 +43,9 @@ export class ComiteSolicitudController {
   })
   async find(
     @param.path.number('id') id: number,
-    @param.query.object('filter') filter?: Filter<Solicitud>,
-  ): Promise<Solicitud[]> {
-    return this.comiteRepository.solicitudes(id).find(filter);
+    @param.query.object('filter') filter?: Filter<Comite>,
+  ): Promise<Comite[]> {
+    return this.solicitudRepository.comites(id).find(filter);
   }
 
   @post('/comites/{id}/solicituds', {
@@ -109,7 +110,7 @@ export class ComiteSolicitudController {
     return this.comiteRepository.solicitudes(id).delete(where);
   }
 
-  @post('/relacionar-solicitudes-a-comite/{id}', {
+  @post('/relacionar-comites-a-solicitud/{id}', {
     responses: {
       '200': {
         description: 'create a AreaInvestigacion model instance',
@@ -122,14 +123,14 @@ export class ComiteSolicitudController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(ArregloSolicitudes, {}),
+          schema: getModelSchemaRef(ArregloComites, {}),
         },
       },
-    }) datos: ArregloSolicitudes,
-    @param.path.number('id') comiteId: number
+    }) datos: ArregloComites,
+    @param.path.number('id') solicitudId: number
   ): Promise<Boolean> {
-    if (datos.solicitudes.length > 0) {
-      datos.solicitudes.forEach(async (solicitudId: number) => {
+    if (datos.comites.length > 0) {
+      datos.comites.forEach(async (comiteId: number) => {
         let existe = await this.comiteSolicitudRepository.findOne({
           where: {
             comiteId: comiteId,
@@ -150,7 +151,7 @@ export class ComiteSolicitudController {
 
   }
   //////////////
-  @post('/evaluacion-jurado', {
+  @post('/comite-solicitud', {
     responses: {
       '200': {
         description: 'create a AreaInvestigacion model instance',

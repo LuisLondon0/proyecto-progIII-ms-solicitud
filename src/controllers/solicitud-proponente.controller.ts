@@ -51,7 +51,7 @@ export class SolicitudProponenteController {
         },
       },
     }) ProponenteSolicitud: ProponenteSolicitud,
-  ): Promise<SolicitudProponente> {
+  ): Promise<Solicitud> {
     let proponente = await this.servicioNotificaciones.GetProponente(ProponenteSolicitud.proponenteId)
     if (proponente) {
       let solicitud = {
@@ -82,7 +82,7 @@ export class SolicitudProponenteController {
       let solicitudProponenteCreado = await this.solicitudProponenteRepository.create(solicitudProponente)
 
 
-      return solicitudProponenteCreado;
+      return creado;
 
     }
     throw new HttpErrors[404](`Entity not found: Proponente with id ${ProponenteSolicitud.proponenteId}`)

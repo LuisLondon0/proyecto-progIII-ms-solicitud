@@ -44,7 +44,7 @@ export class CargarArchivoController {
       },
     },
   })
-  async cargarArchivoZip(
+  async cargarArchivoZipById(
     @inject(RestBindings.Http.RESPONSE) response: Response,
     @requestBody.file() request: Request,
     @param.path.number("solicitudId") solicitudId: number
@@ -64,7 +64,70 @@ export class CargarArchivoController {
     return res;
   }
 
+  @post('/CargarArchivoZip', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Función de carga de la imagen de un producto.',
+      },
+    },
+  })
+  async cargarArchivoZip(
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @requestBody.file() request: Request
+  ): Promise<object | false> {
+    const rutaArchivoZip = path.join(__dirname, llaves.carpetaArchivoZip);
+    let res = await this.StoreFileToPath(rutaArchivoZip, llaves.nombreCampoArchivoZip, request, response, llaves.extensionesPermitidasZip);
+    if (res) {
+      const nombre_archivo = response.req?.file?.filename;
+      if (nombre_archivo) {
+        return {filename: nombre_archivo};
+      }
+    }
+    return res;
+  }
+
   @post('/CargaFormato/{tipoSolicitudId}', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Función de carga de formatos al tipo de solicitud.',
+      },
+    },
+  })
+  async CargaFormatoById(
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @requestBody.file() request: Request,
+    @param.path.number("tipoSolicitudId") tipoSolicitudId: number
+  ): Promise<object | false> {
+    const rutaFormato = path.join(__dirname, llaves.carpetaFormatos);
+    let res = await this.StoreFileToPath(rutaFormato, llaves.nombreCampoFormato, request, response, llaves.extensionesPermitidasFormato);
+    if (res) {
+      const nombre_archivo = response.req?.file?.filename;
+      if (nombre_archivo) {
+        let data = {
+          formato: nombre_archivo
+        }
+        await this.tipoSolicitudRepository.updateById(tipoSolicitudId, data);
+        return {filename: nombre_archivo};
+      }
+    }
+    return res;
+  }
+
+  @post('/CargaFormato', {
     responses: {
       200: {
         content: {
@@ -88,10 +151,6 @@ export class CargarArchivoController {
     if (res) {
       const nombre_archivo = response.req?.file?.filename;
       if (nombre_archivo) {
-        let data = {
-          formato: nombre_archivo
-        }
-        await this.tipoSolicitudRepository.updateById(tipoSolicitudId, data);
         return {filename: nombre_archivo};
       }
     }
@@ -99,6 +158,40 @@ export class CargarArchivoController {
   }
 
   @post('/CargaFormatoDiligenciado/{resultadoEvaluacionId}', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Función de carga de formato diligenciado a la respuesta.',
+      },
+    },
+  })
+  async CargaFormatoDiligenciadoById(
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @requestBody.file() request: Request,
+    @param.path.number("resultadoEvaluacionId") resultadoEvaluacionId: number
+  ): Promise<object | false> {
+    const rutaFormatoDiligenciado = path.join(__dirname, llaves.carpetaFormatosDiligenciados);
+    let res = await this.StoreFileToPath(rutaFormatoDiligenciado, llaves.nombreCampoFormatoDiligenciado, request, response, llaves.extensionesPermitidasFormatoDiligenciado);
+    if (res) {
+      const nombre_archivo = response.req?.file?.filename;
+      if (nombre_archivo) {
+        let data = {
+          formatoDiligenciado: nombre_archivo
+        }
+        await this.resultadoEvaluacionRepository.updateById(resultadoEvaluacionId, data);
+        return {filename: nombre_archivo};
+      }
+    }
+    return res;
+  }
+
+  @post('/CargaFormatoDiligenciado', {
     responses: {
       200: {
         content: {
@@ -122,10 +215,6 @@ export class CargarArchivoController {
     if (res) {
       const nombre_archivo = response.req?.file?.filename;
       if (nombre_archivo) {
-        let data = {
-          formatoDiligenciado: nombre_archivo
-        }
-        await this.resultadoEvaluacionRepository.updateById(resultadoEvaluacionId, data);
         return {filename: nombre_archivo};
       }
     }
