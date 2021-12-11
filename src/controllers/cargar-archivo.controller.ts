@@ -144,7 +144,6 @@ export class CargarArchivoController {
   async CargaFormato(
     @inject(RestBindings.Http.RESPONSE) response: Response,
     @requestBody.file() request: Request,
-    @param.path.number("tipoSolicitudId") tipoSolicitudId: number
   ): Promise<object | false> {
     const rutaFormato = path.join(__dirname, llaves.carpetaFormatos);
     let res = await this.StoreFileToPath(rutaFormato, llaves.nombreCampoFormato, request, response, llaves.extensionesPermitidasFormato);
@@ -208,7 +207,6 @@ export class CargarArchivoController {
   async CargaFormatoDiligenciado(
     @inject(RestBindings.Http.RESPONSE) response: Response,
     @requestBody.file() request: Request,
-    @param.path.number("resultadoEvaluacionId") resultadoEvaluacionId: number
   ): Promise<object | false> {
     const rutaFormatoDiligenciado = path.join(__dirname, llaves.carpetaFormatosDiligenciados);
     let res = await this.StoreFileToPath(rutaFormatoDiligenciado, llaves.nombreCampoFormatoDiligenciado, request, response, llaves.extensionesPermitidasFormatoDiligenciado);
