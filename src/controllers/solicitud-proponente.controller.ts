@@ -217,10 +217,26 @@ export class SolicitudProponenteController {
           }
         })
         if (!existe) {
-          this.solicitudProponenteRepository.create({
-            proponenteId: proponenteId,
-            solicitudId: solicitudId
-          })
+          let proponente = await this.servicioNotificaciones.GetProponente(proponenteId)
+          if (proponente) {
+            let solicitud = await this.solicitudRepository.findById(solicitudId)
+
+            let modalidad = await this.modalidadRepository.findById(solicitud.modalidadId);
+            let tipoSolicitud = await this.tipoSolicitudRepository.findById(solicitud.tipoSolicitudId);
+
+            let datos = new CorreoNotificacion();
+            datos.destinatario = proponente.correo;
+            datos.asunto = Configuracion.asuntoCreacionSolicitud;
+            datos.mensaje = `Hola ${proponente.primerNombre} <br/>${Configuracion.mensajeSolicitudCreada} <br/>Fecha: ${solicitud.fecha}<br/>Nombre del Trabajo: ${solicitud.nombreTrabajo}<br/>Modalidad: ${modalidad.nombre}<br/>Area Investigacion: Ciencias<br/>Descripcion: ${solicitud.descripcion}<br/>Tipo de Solicitud: ${tipoSolicitud.nombre}<br/>Material: ${solicitud.archivoZip}`
+
+            this.servicioNotificaciones.EnviarCorreo(datos);
+
+            this.solicitudProponenteRepository.create({
+              proponenteId: proponenteId,
+              solicitudId: solicitudId
+            })
+          }
+          throw new HttpErrors[404](`Entity not found: Proponente with id ${proponenteId}`)
 
         }
       })
